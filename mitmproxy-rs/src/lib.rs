@@ -15,6 +15,7 @@ mod syntax_highlight;
 pub mod task;
 mod udp_client;
 mod util;
+mod windows_redirector;
 
 static LOGGER_INITIALIZED: LazyLock<Mutex<bool>> = LazyLock::new(|| Mutex::new(false));
 
@@ -82,6 +83,12 @@ mod mitmproxy_rs {
         use crate::server::{start_wireguard_server, WireGuardServer};
         #[pymodule_export]
         use crate::util::{genkey, pubkey};
+    }
+
+    #[pymodule]
+    mod windows {
+        #[pymodule_export]
+        use crate::windows_redirector::PyWindowsRedirector;
     }
 
     #[pymodule]
