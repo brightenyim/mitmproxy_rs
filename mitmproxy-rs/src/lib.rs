@@ -54,6 +54,9 @@ mod mitmproxy_rs {
     mod local {
         #[pymodule_export]
         use crate::server::{start_local_redirector, LocalRedirector};
+        #[cfg(windows)]
+        #[pymodule_export]
+        use crate::server::WindowsRedirector;
     }
 
     #[pymodule]
@@ -125,8 +128,7 @@ mod mitmproxy_rs {
         m.py().import("mitmproxy_macos")?;
         #[cfg(all(target_os = "linux", not(feature = "docs")))]
         m.py().import("mitmproxy_linux")?;
-        #[cfg(windows)]
-        m.py().import("mitmproxy_windows")?;
+        // Windows functionality is now integrated directly into mitmproxy_rs
 
         Ok(())
     }

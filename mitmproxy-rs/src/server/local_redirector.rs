@@ -11,6 +11,8 @@ use mitmproxy::packet_sources::windows::WindowsConf;
 use pyo3::prelude::*;
 
 use crate::server::base::Server;
+#[cfg(windows)]
+use crate::server::windows_redirector::WindowsRedirector;
 use tokio::sync::mpsc;
 
 #[pyclass(module = "mitmproxy_rs.local")]
@@ -19,6 +21,8 @@ pub struct LocalRedirector {
     server: Server,
     conf_tx: mpsc::UnboundedSender<InterceptConf>,
     spec: String,
+    #[cfg(windows)]
+    windows_redirector: Option<WindowsRedirector>,
 }
 
 impl LocalRedirector {
@@ -27,6 +31,22 @@ impl LocalRedirector {
             server,
             conf_tx,
             spec: "inactive".to_string(),
+            #[cfg(windows)]
+            windows_redirector: None,
+        }
+    }
+
+    #[cfg(windows)]
+    pub fn new_with_windows_redirector(
+        server: Server, 
+        conf_tx: mpsc::UnboundedSender<InterceptConf>,
+        windows_redirector: WindowsRedirector
+    ) -> Self {
+        Self {
+            server,
+            conf_tx,
+            spec: "inactive".to_string(),
+            windows_redirector: Some(windows_redirector),
         }
     }
 }
@@ -45,10 +65,20 @@ impl LocalRedirector {
     /// Set a new intercept spec.
     pub fn set_intercept(&mut self, spec: String) -> PyResult<()> {
         let conf = InterceptConf::try_from(spec.as_str())?;
-        self.spec = spec;
+        self.spec = spec.clone();
+        
+        // Send to the main server
         self.conf_tx
-            .send(conf)
+            .send(conf.clone())
             .map_err(crate::util::event_queue_unavailable)?;
+        
+        // On Windows, also send to the integrated redirector
+        #[cfg(windows)]
+        if let Some(ref redirector) = self.windows_redirector {
+            redirector.send_intercept_conf_internal(conf)
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to send intercept conf to Windows redirector: {}", e)))?;
+        }
+        
         Ok(())
     }
 
@@ -103,19 +133,19 @@ pub fn start_local_redirector(
 ) -> PyResult<Bound<PyAny>> {
     #[cfg(windows)]
     {
-        let executable_path: std::path::PathBuf = py
-            .import("mitmproxy_windows")?
-            .call_method0("executable_path")?
-            .extract()?;
-        if !executable_path.exists() {
-            return Err(anyhow::anyhow!("{} does not exist", executable_path.display()).into());
-        }
-        let conf = WindowsConf { executable_path };
+        // Use integrated Windows redirector instead of external process
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            // Create a dummy conf for the base server (we'll use integrated redirector)
+            let conf = WindowsConf { 
+                executable_path: std::path::PathBuf::from("integrated") 
+            };
             let (server, conf_tx) =
                 Server::init(conf, handle_tcp_stream, handle_udp_stream).await?;
 
-            Ok(LocalRedirector::new(server, conf_tx))
+            // Create integrated Windows redirector
+            let windows_redirector = WindowsRedirector::new(None).await?;
+            
+            Ok(LocalRedirector::new_with_windows_redirector(server, conf_tx, windows_redirector))
         })
     }
     #[cfg(target_os = "linux")]

@@ -8,7 +8,6 @@ members = [
     "mitmproxy-linux-ebpf",
     "mitmproxy-linux-ebpf-common",
     "mitmproxy-macos/certificate-truster",
-    "mitmproxy-windows/redirector",
     "wireguard-test-client",
 ]
 default-members = [
@@ -19,7 +18,6 @@ default-members = [
     "mitmproxy-linux",
     "mitmproxy-linux-ebpf-common",
     "mitmproxy-macos/certificate-truster",
-    "mitmproxy-windows/redirector",
     "wireguard-test-client",
 ]
 
