@@ -34,6 +34,11 @@ console-subscriber = { version = "0.4.1", optional = true }
 [target.'cfg(target_os = "linux")'.dependencies]
 nix = { version = "0.30.1", features = ["user"] }
 
+[target.'cfg(windows)'.dependencies]
+windivert = "0.6.0"
+lru_time_cache = "0.11.11"
+internet-packet = { version = "0.2.2", features = ["checksums"] }
+
 [dev-dependencies]
 env_logger = "0.11"
 
