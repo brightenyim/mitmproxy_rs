@@ -6,7 +6,7 @@ use mitmproxy::packet_sources::linux::LinuxConf;
 #[cfg(target_os = "macos")]
 use mitmproxy::packet_sources::macos::MacosConf;
 #[cfg(windows)]
-use mitmproxy::packet_sources::windows::WindowsConf;
+use mitmproxy::packet_sources::windows_internal::WindowsInternalConf;
 
 use pyo3::prelude::*;
 
@@ -103,14 +103,7 @@ pub fn start_local_redirector(
 ) -> PyResult<Bound<PyAny>> {
     #[cfg(windows)]
     {
-        let executable_path: std::path::PathBuf = py
-            .import("mitmproxy_windows")?
-            .call_method0("executable_path")?
-            .extract()?;
-        if !executable_path.exists() {
-            return Err(anyhow::anyhow!("{} does not exist", executable_path.display()).into());
-        }
-        let conf = WindowsConf { executable_path };
+        let conf = WindowsInternalConf;
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let (server, conf_tx) =
                 Server::init(conf, handle_tcp_stream, handle_udp_stream).await?;

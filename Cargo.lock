@@ -2233,6 +2233,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tun",
+ "windivert",
  "windows 0.61.3",
 ]
 
@@ -2328,6 +2329,7 @@ dependencies = [
  "rand_core 0.6.4",
  "tar",
  "tokio",
+ "windivert",
 ]
 
 [[package]]
