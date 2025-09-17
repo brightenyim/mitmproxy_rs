@@ -2231,6 +2231,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tun",
+ "windivert",
  "windows 0.61.3",
 ]
 
@@ -2315,7 +2316,9 @@ dependencies = [
  "console-subscriber",
  "data-encoding",
  "env_logger",
+ "internet-packet",
  "log",
+ "lru_time_cache",
  "mitmproxy",
  "mitmproxy-contentviews",
  "mitmproxy-highlight",
@@ -2326,6 +2329,7 @@ dependencies = [
  "rand_core 0.6.4",
  "tar",
  "tokio",
+ "windivert",
 ]
 
 [[package]]
